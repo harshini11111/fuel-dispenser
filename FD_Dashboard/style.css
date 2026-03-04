@@ -190,3 +190,40 @@ th, td {
     width: 100% !important;
     height: 150px !important;
 }
+
+.mode-btn{
+    padding:10px 20px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    background:#16c60c;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* ===== MODE SWITCH BOTTOM RIGHT (ADDED WITHOUT CHANGING EXISTING CSS) ===== */
+
+.mode-switch{
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+}
+
+.mode-btn{
+    padding:10px 20px;
+    border:none;
+    border-radius:8px;
+    background:#16c60c;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(0,255,0,0.4);
+}
+
+.mode-btn:hover{
+    background:#12a809;
+}
