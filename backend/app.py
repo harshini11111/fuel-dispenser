@@ -129,6 +129,8 @@ def get_data():
     print("📥 ML INPUT:", sample)
 
     prediction = model.predict(sample)[0]
+    prob = model.predict_proba(sample)[0]
+    failure_probability = float(prob[2])
 
     print("🤖 ML OUTPUT:", prediction)
 
@@ -139,12 +141,13 @@ def get_data():
     }
 
     return jsonify({
-        "temperature": temp,
-        "current": curr,
-        "flow": flow,
-        "vibration": vib,
-        "status": status_map.get(prediction, "Unknown")
-    })
+    "temperature": temp,
+    "current": curr,
+    "flow": flow,
+    "vibration": vib,
+    "status": status_map.get(prediction, "Unknown"),
+    "failure_probability": failure_probability
+})
 
 #--------------DEMO DATA--------------
 
@@ -160,6 +163,8 @@ def demo_data():
     sample = np.array([[temperature, current, flow, vibration]])
 
     prediction = model.predict(sample)[0]
+    prob = model.predict_proba(sample)[0]
+    failure_probability = float(prob[2])
 
     status_map = {
         0: "Healthy",
@@ -168,12 +173,13 @@ def demo_data():
     }
 
     return jsonify({
-        "temperature": temperature,
-        "current": current,
-        "flow": flow,
-        "vibration": vibration,
-        "status": status_map.get(prediction, "Unknown")
-    })
+    "temperature": temperature,
+    "current": current,
+    "flow": flow,
+    "vibration": vibration,
+    "status": status_map.get(prediction, "Unknown"),
+    "failure_probability": failure_probability
+})
 
 # ---------------- VIEW CSV LOGS ----------------
 @app.route("/logs")
