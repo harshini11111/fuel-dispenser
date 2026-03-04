@@ -14,13 +14,13 @@ model = joblib.load("model.pkl")
 print("✅ ML MODEL LOADED:", model)
 
 # ---------------- GLOBAL SENSOR DATA ----------------
-# sensor_data = {
-#     "temperature": 0.0,
-#     "current": 0.0,
-#     "flow": 0.0,
-#     "vibration": 0.0,
-#     "health": 0
-# }
+sensor_data = {
+    "temperature": 0.0,
+    "current": 0.0,
+    "flow": 0.0,
+    "vibration": 0.0,
+    "health": 0
+}
 # sensor_data = {
 #     "temperature": 45,
 #     "current": 1.5,
@@ -28,13 +28,13 @@ print("✅ ML MODEL LOADED:", model)
 #     "vibration": 1.5,
 #     "health": 1
 # }
-sensor_data = {
-    "temperature": 25,
-    "current": 0.5,
-    "flow": 10,
-    "vibration": 0.003,
-    "health": 0
-}
+# sensor_data = {
+#     "temperature": 25,
+#     "current": 0.5,
+#     "flow": 10,
+#     "vibration": 0.003,
+#     "health": 0
+# }
 # 🔴 FAILURE TEST DATA (temporary)
 # sensor_data = {
 #     "temperature": 100.0,
@@ -120,6 +120,27 @@ def get_data():
         "vibration": vib,
         "status": status_map.get(prediction, "Unknown")
     })
+
+@app.route("/logs")
+def view_logs():
+    import pandas as pd
+    df = pd.read_csv("sensor_log_augmented.csv")
+    return df.tail(20).to_json(orient="records")
+
+@app.route("/api/importance")
+def feature_importance():
+
+    try:
+        importances = model.feature_importances_
+
+        features = ["temperature", "current", "flow", "vibration"]
+
+        result = dict(zip(features, importances.tolist()))
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 # ---------------- RUN SERVER ----------------
 if __name__ == "__main__":
