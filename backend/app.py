@@ -5,6 +5,7 @@ import numpy as np
 import csv
 from datetime import datetime
 import os
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,28 @@ CORS(app)
 # ---------------- LOAD ML MODEL ----------------
 model = joblib.load("model.pkl")
 print("✅ ML MODEL LOADED:", model)
+
+# ---------------- DATABASE SETUP ----------------
+def init_db():
+    conn = sqlite3.connect("faults.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS sensor_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT,
+        temperature REAL,
+        current REAL,
+        flow REAL,
+        vibration REAL,
+        health INTEGER
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # ---------------- GLOBAL SENSOR DATA ----------------
 sensor_data = {
@@ -21,28 +44,6 @@ sensor_data = {
     "vibration": 0.0,
     "health": 0
 }
-# sensor_data = {
-#     "temperature": 45,
-#     "current": 1.5,
-#     "flow": 32,
-#     "vibration": 1.5,
-#     "health": 1
-# }
-# sensor_data = {
-#     "temperature": 25,
-#     "current": 0.5,
-#     "flow": 10,
-#     "vibration": 0.003,
-#     "health": 0
-# }
-# 🔴 FAILURE TEST DATA (temporary)
-# sensor_data = {
-#     "temperature": 100.0,
-#     "current": 3.2,
-#     "flow": 0,
-#     "vibration": 300,
-#     "health": 2
-# }
 
 CSV_FILE = "sensor_log_augmented.csv"
 
@@ -77,11 +78,13 @@ def receive_esp32():
     # Debug print
     print("📡 ESP DATA RECEIVED:", sensor_data)
 
-    # Save to CSV
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # ---------------- SAVE TO CSV ----------------
     with open(CSV_FILE, "a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            timestamp,
             sensor_data["temperature"],
             sensor_data["current"],
             sensor_data["flow"],
@@ -89,11 +92,31 @@ def receive_esp32():
             sensor_data["health"]
         ])
 
+    # ---------------- SAVE TO DATABASE ----------------
+    conn = sqlite3.connect("faults.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO sensor_data (timestamp, temperature, current, flow, vibration, health)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        timestamp,
+        sensor_data["temperature"],
+        sensor_data["current"],
+        sensor_data["flow"],
+        sensor_data["vibration"],
+        sensor_data["health"]
+    ))
+
+    conn.commit()
+    conn.close()
+
     return {"message": "ESP32 data stored successfully"}
 
 # ---------------- API FOR DASHBOARD ----------------
 @app.route("/api/data")
 def get_data():
+
     temp = sensor_data["temperature"]
     curr = sensor_data["current"]
     flow = sensor_data["flow"]
@@ -101,10 +124,10 @@ def get_data():
 
     sample = np.array([[temp, curr, flow, vib]])
 
-    # ML debug prints
     print("📥 ML INPUT:", sample)
 
     prediction = model.predict(sample)[0]
+
     print("🤖 ML OUTPUT:", prediction)
 
     status_map = {
@@ -121,26 +144,56 @@ def get_data():
         "status": status_map.get(prediction, "Unknown")
     })
 
+# ---------------- VIEW CSV LOGS ----------------
 @app.route("/logs")
 def view_logs():
     import pandas as pd
     df = pd.read_csv("sensor_log_augmented.csv")
     return df.tail(20).to_json(orient="records")
 
+# ---------------- FEATURE IMPORTANCE ----------------
 @app.route("/api/importance")
 def feature_importance():
 
     try:
         importances = model.feature_importances_
-
         features = ["temperature", "current", "flow", "vibration"]
-
         result = dict(zip(features, importances.tolist()))
-
         return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+# ---------------- DATABASE HISTORY API ----------------
+@app.route("/api/history")
+def get_history():
+
+    conn = sqlite3.connect("faults.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT timestamp, temperature, current, flow, vibration, health
+    FROM sensor_data
+    ORDER BY id DESC
+    LIMIT 20
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    result = []
+
+    for row in rows:
+        result.append({
+            "timestamp": row[0],
+            "temperature": row[1],
+            "current": row[2],
+            "flow": row[3],
+            "vibration": row[4],
+            "health": row[5]
+        })
+
+    return jsonify(result)
 
 # ---------------- RUN SERVER ----------------
 if __name__ == "__main__":
