@@ -166,10 +166,12 @@ function estimateRUL(value, threshold) {
 // ================= UPDATE =================
 async function updateDashboard() {
 
-    const response = await fetch("http://127.0.0.1:5000/api/data");
+    //const response = await fetch("https://fuel-dispenser.onrender.com/api/data");
+    const response = await fetch("https://fuel-dispenser.onrender.com/api/demo");
     const data = await response.json();
 
-    const { temperature, current, flow, vibration, failure_probability } = data;
+    const { temperature, current, flow, vibration } = data;
+    const failure_probability = data.failure_probability || 0;
 
     tempBox.querySelector("h2").innerText = temperature + " °C";
     currentBox.querySelector("h2").innerText = current + " A";
@@ -223,7 +225,7 @@ updateDashboard();
 // ================= LOAD FEATURE IMPORTANCE =================
 async function loadImportance() {
     try {
-        const response = await fetch("http://127.0.0.1:5000/api/importance");
+        const response = await fetch("https://fuel-dispenser.onrender.com/api/importance");
         const data = await response.json();
 
         importanceChart.data.labels = Object.keys(data);
