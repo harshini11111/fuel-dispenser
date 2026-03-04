@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fuel Dispenser Predictive Maintenance Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Fuel Dispenser Predictive Maintenance Dashboard</h1>
+</header>
+
+<!-- KPI CARDS -->
+<section class="kpi-container">
+    <div class="kpi green" id="tempBox">
+        <span>Temperature</span>
+        <h2>0 °C</h2>
+    </div>
+
+    <div class="kpi green" id="currentBox">
+        <span>Current</span>
+        <h2>0 A</h2>
+    </div>
+
+    <div class="kpi green" id="flowBox">
+        <span>Flow Rate</span>
+        <h2>0 L/min</h2>
+    </div>
+
+    <div class="kpi green" id="vibrationBox">
+        <span>Vibration</span>
+        <h2>0</h2>
+    </div>
+</section>
+
+<div class="pump-status">
+    Pump Status: <span class="on">ON</span>
+</div>
+
+<!-- FAILURE DISPLAY -->
+<div id="healthText" class="health-wrapper"></div>
+
+<!-- ANALYTICS SECTION -->
+<section class="analytics-section">
+
+    <div class="analytics-box">
+        <h3>Health Score</h3>
+        <div class="progress-bar">
+            <div id="healthBar"></div>
+        </div>
+        <p id="healthScoreValue">100%</p>
+    </div>
+
+    <div class="analytics-box">
+        <h3>Failure Probability</h3>
+        <canvas id="probabilityGauge"></canvas>
+    </div>
+
+    <div class="analytics-box">
+        <h3>Estimated RUL</h3>
+        <p id="rulValue">-- Hours</p>
+    </div>
+
+    <div class="analytics-box">
+        <h3>Feature Importance</h3>
+        <canvas id="importanceChart"></canvas>
+    </div>
+
+</section>
+
+<!-- GRAPHS -->
+<section class="chart-grid">
+    <div class="chart-card"><canvas id="tempChart"></canvas></div>
+    <div class="chart-card"><canvas id="currentChart"></canvas></div>
+    <div class="chart-card"><canvas id="flowChart"></canvas></div>
+    <div class="chart-card"><canvas id="vibrationChart"></canvas></div>
+</section>
+
+<!-- FAULT HISTORY -->
+<h2 class="log-title">Fault History</h2>
+<table id="faultTable">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Fault</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: #020617;
+    color: #fff;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    padding: 25px 0;
+    font-size: 22px;
+}
+
+/* KPI */
+.kpi-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.kpi {
+    width: 220px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid white;
+    box-shadow: 0 0 15px rgba(255,255,255,0.6);
+}
+
+.kpi span {
+    font-size: 15px;
+}
+
+.kpi h2 {
+    margin-top: 10px;
+    font-size: 26px;
+}
+
+/* KPI COLORS */
+.green { background: #16c60c; }
+.yellow { background: #ffd000; color: black; }
+.red { background: #e53935; }
+
+/* Pump */
+.pump-status {
+    text-align: center;
+    margin: 25px 0 10px 0;
+    font-size: 22px;
+}
+
+.on {
+    color: #16c60c;
+    font-weight: bold;
+}
+
+/* 🔥 SYSTEM HEALTH CENTER */
+.system-health-center {
+    text-align: center;
+    margin: 20px 0 40px 0;
+}
+
+#healthText {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+.health-green { background: #16c60c; }
+.health-yellow { background: #ffd000; color: black; }
+.health-red { background: #e53935; }
+
+/* Charts */
+.chart-grid {
+    max-width: 1200px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    padding: 20px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 260px !important;
+}
+
+/* Wrapper below pump */
+.health-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;   /* 🔥 THIS ADDS GAP BETWEEN BOXES */
+    margin: 25px 0 40px 0;
+}
+
+/* Individual failure box */
+.failure-box {
+    background: #e53935;
+    color: white;
+    padding: 12px 35px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(255,0,0,0.5);
+}
+
+/* Healthy box */
+.healthy-box {
+    background: #16c60c;
+    color: white;
+    padding: 12px 35px;
+    border-radius: 12px;
+    font-size: 22px;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(0,255,0,0.5);
+}
+
+/* ===== ANALYTICS SECTION (COMPACT VERSION) ===== */
+
+.analytics-section {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 40px 0;
+}
+
+.analytics-box {
+    background: #111827;
+    padding: 20px;
+    border-radius: 15px;
+    width: 260px;
+    height: 180px;            /* 🔥 FIXED HEIGHT */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;  /* Center content vertically */
+    align-items: center;
+    box-shadow: 0 0 15px rgba(255,255,255,0.08);
+}
+
+/* Progress bar smaller */
+.progress-bar {
+    background: #333;
+    height: 15px;
+    width: 80%;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+#healthBar {
+    height: 100%;
+    width: 100%;
+    background: #16c60c;
+    transition: width 0.5s ease;
+}
+.log-title {
+    text-align: center;
+    margin-top: 40px;
+}
+
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid white;
+    padding: 8px;
+    text-align: center;
+}
+
+/* Feature Importance Chart */
+#importanceChart {
+    width: 100% !important;
+    height: 150px !important;
+}
