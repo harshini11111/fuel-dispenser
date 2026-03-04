@@ -6,6 +6,8 @@ import csv
 from datetime import datetime
 import os
 import sqlite3
+import random
+
 
 app = Flask(__name__)
 CORS(app)
@@ -141,6 +143,35 @@ def get_data():
         "current": curr,
         "flow": flow,
         "vibration": vib,
+        "status": status_map.get(prediction, "Unknown")
+    })
+
+#--------------DEMO DATA--------------
+
+@app.route("/api/demo")
+def demo_data():
+
+    # Random values for sensors
+    temperature = random.choice([25, 30, 35, 45, 55, 65])
+    current = random.choice([0.5, 0.8, 1.2, 1.6, 2.0, 2.5])
+    flow = random.choice([10, 12, 8, 3, 0])
+    vibration = random.choice([0.01, 0.02, 0.05, 0.1, 15])
+
+    sample = np.array([[temperature, current, flow, vibration]])
+
+    prediction = model.predict(sample)[0]
+
+    status_map = {
+        0: "Healthy",
+        1: "Warning",
+        2: "Failure"
+    }
+
+    return jsonify({
+        "temperature": temperature,
+        "current": current,
+        "flow": flow,
+        "vibration": vibration,
         "status": status_map.get(prediction, "Unknown")
     })
 
