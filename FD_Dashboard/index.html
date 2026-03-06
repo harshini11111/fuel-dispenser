@@ -1,105 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Fuel Dispenser Predictive Maintenance Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FuelGuard — Dispenser Command Center</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
-<header>
-    <h1>Fuel Dispenser Predictive Maintenance Dashboard</h1>
-
-    <!-- MODE SWITCH -->
-    <div class="mode-switch">
-        <button onclick="setMode('live')" class="mode-btn">LIVE</button>
-        <button onclick="setMode('demo')" class="mode-btn">DEMO</button>
-    </div>
-</header>
-
-<!-- KPI CARDS -->
-<section class="kpi-container">
-
-    <div class="kpi green" id="tempBox">
-        <span>Temperature</span>
-        <h2>0 °C</h2>
+  <!-- ═══════════════════════════════════════
+       TOPBAR
+  ═══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-icon">⛽</div>
+      <div>
+        <div class="logo-name">FUELGUARD</div>
+        <div class="logo-sub">Predictive Maintenance System</div>
+      </div>
     </div>
 
-    <div class="kpi green" id="currentBox">
-        <span>Current</span>
-        <h2>0 A</h2>
+    <div class="center-title">
+      <div class="ct-main">DISPENSER COMMAND CENTER</div>
+      <div class="ct-sub">INDIAN OIL · STN-047 · UNIT-1 LIVE VIEW</div>
     </div>
 
-    <div class="kpi green" id="flowBox">
-        <span>Flow Rate</span>
-        <h2>0 L/min</h2>
+    <div class="topbar-right">
+      <button class="mode-btn live" onclick="setMode('live')" id="btn-live">⚡ LIVE</button>
+      <button class="mode-btn demo active-mode" onclick="setMode('demo')" id="btn-demo">🔵 DEMO</button>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <span id="modeLabel">DEMO</span>
+      </div>
+      <div class="clock" id="timeClock">--:--:--</div>
     </div>
+  </header>
 
-    <div class="kpi green" id="vibrationBox">
-        <span>Vibration</span>
-        <h2>0</h2>
+  <!-- ═══════════════════════════════════════
+       ALERT TICKER
+  ═══════════════════════════════════════ -->
+  <div class="alert-bar">
+    <div class="alert-tag">⚠ ALERTS</div>
+    <div class="ticker-wrap">
+      <div class="ticker-inner">
+        <span id="alertScroll">System initializing…</span>
+        <span id="alertScrollClone"></span>
+      </div>
     </div>
+  </div>
 
-</section>
+  <!-- ═══════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════ -->
+  <main class="main">
 
-<div class="pump-status">
-    Pump Status: <span class="on">ON</span>
-</div>
+    <!-- ── KPI ROW ── -->
+    <div>
+      <div class="sec-label">📊 Key Performance Indicators</div>
+      <div class="kpi-row">
 
-<!-- FAILURE DISPLAY -->
-<div id="healthText" class="health-wrapper"></div>
-
-<!-- ANALYTICS -->
-<section class="analytics-section">
-
-    <div class="analytics-box">
-        <h3>Health Score</h3>
-        <div class="progress-bar">
-            <div id="healthBar"></div>
+        <div class="kpi-card" style="--kc: var(--green)">
+          <div class="kpi-label">Health Score</div>
+          <div class="kpi-val" id="healthScoreValue">100<span class="kpi-unit">%</span></div>
+          <div class="kpi-hint" id="healthHint">Rule-based Engine</div>
         </div>
-        <p id="healthScoreValue">100%</p>
+
+        <div class="gauge-card">
+          <div class="kpi-label" style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--txtd);margin-bottom:6px;">
+            Failure Probability
+          </div>
+          <div class="gauge-wrap">
+            <canvas id="probabilityGauge" height="90"></canvas>
+            <div class="gauge-center">
+              <div class="gauge-num" id="gaugeNum">0</div>
+              <div class="gauge-pct">%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card" style="--kc: var(--yellow)">
+          <div class="kpi-label">Est. Remaining Useful Life</div>
+          <div class="kpi-val" id="rulValue">--<span class="kpi-unit">hr</span></div>
+          <div class="kpi-hint">Degradation Model</div>
+        </div>
+
+        <div class="kpi-card" style="--kc: var(--red)">
+          <div class="kpi-label">Active Faults</div>
+          <div class="kpi-val" id="activeFaults">0</div>
+          <div class="kpi-hint" id="faultHint">All systems nominal</div>
+        </div>
+
+      </div>
     </div>
 
-    <div class="analytics-box">
-        <h3>Failure Probability</h3>
-        <canvas id="probabilityGauge"></canvas>
+    <!-- ── DISPENSER OVERVIEW ── -->
+    <div>
+      <div class="sec-label">⛽ Dispenser Overview</div>
+      <div class="disp-overview">
+
+        <div class="unit-card">
+          <div class="unit-lbl">UNIT ID</div>
+          <div class="unit-num">1</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--txtd);letter-spacing:2px;margin-top:4px;">
+            PETROL · GILBARCO V100
+          </div>
+          <div class="pump-badge">
+            <div class="pd"></div>PUMP ON
+          </div>
+        </div>
+
+        <div class="health-panel">
+          <div class="hp-top">
+            <div>
+              <div class="hp-label">HEALTH SCORE</div>
+              <div class="hp-score" id="healthScoreBar">100%</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="hp-label">STATUS</div>
+              <div id="overviewStatus" style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--green);letter-spacing:1px;">
+                HEALTHY
+              </div>
+            </div>
+          </div>
+          <div class="progress-track">
+            <div id="healthBar"></div>
+          </div>
+          <div class="rul-row">
+            <span>REMAINING USEFUL LIFE</span>
+            <span class="rul-val" id="rulBar">-- hr</span>
+          </div>
+        </div>
+
+      </div>
     </div>
 
-    <div class="analytics-box">
-        <h3>Estimated RUL</h3>
-        <p id="rulValue">-- Hours</p>
+    <!-- ── SENSOR READINGS ── -->
+    <div>
+      <div class="sec-label">📡 Live Sensor Readings</div>
+      <div class="sensor-row">
+
+        <div class="sensor-card" id="tempBox">
+          <div class="sc-icon">🌡️</div>
+          <div class="sc-label">Temperature</div>
+          <div><span class="sc-value" id="tempVal">--</span><span class="sc-unit"> °C</span></div>
+          <div class="sc-thresh">MAX: 50°C · CRIT: 55°C</div>
+          <div class="sc-bar-wrap"><div class="sc-bar-fill" id="tempBar" style="width:0%"></div></div>
+          <div class="sc-status-pill ok" id="tempPill">● NORMAL</div>
+        </div>
+
+        <div class="sensor-card" id="currentBox">
+          <div class="sc-icon">⚡</div>
+          <div class="sc-label">Motor Current</div>
+          <div><span class="sc-value" id="currentVal">--</span><span class="sc-unit"> A</span></div>
+          <div class="sc-thresh">MAX: 1.8A · CRIT: 2.5A</div>
+          <div class="sc-bar-wrap"><div class="sc-bar-fill" id="currentBar" style="width:0%"></div></div>
+          <div class="sc-status-pill ok" id="currentPill">● NORMAL</div>
+        </div>
+
+        <div class="sensor-card" id="flowBox">
+          <div class="sc-icon">💧</div>
+          <div class="sc-label">Flow Rate</div>
+          <div><span class="sc-value" id="flowVal">--</span><span class="sc-unit"> L/min</span></div>
+          <div class="sc-thresh">RANGE: 1–15 L/min</div>
+          <div class="sc-bar-wrap"><div class="sc-bar-fill" id="flowBar" style="width:0%"></div></div>
+          <div class="sc-status-pill ok" id="flowPill">● NORMAL</div>
+        </div>
+
+        <div class="sensor-card" id="vibrationBox">
+          <div class="sc-icon">📳</div>
+          <div class="sc-label">Vibration</div>
+          <div><span class="sc-value" id="vibVal">--</span></div>
+          <div class="sc-thresh">MAX: 10 · CRIT: 20</div>
+          <div class="sc-bar-wrap"><div class="sc-bar-fill" id="vibrationBar" style="width:0%"></div></div>
+          <div class="sc-status-pill ok" id="vibPill">● NORMAL</div>
+        </div>
+
+      </div>
     </div>
 
-</section>
+    <!-- ── SYSTEM HEALTH STATUS ── -->
+    <div>
+      <div class="sec-label">🏥 System Health Status</div>
+      <div class="health-center" id="healthText"></div>
+    </div>
 
-<!-- GRAPHS -->
-<section class="chart-grid">
+    <!-- ── CHARTS ── -->
+    <div>
+      <div class="sec-label">📈 Sensor Trend History</div>
+      <div class="chart-grid">
 
-    <div class="chart-card"><canvas id="tempChart"></canvas></div>
-    <div class="chart-card"><canvas id="currentChart"></canvas></div>
-    <div class="chart-card"><canvas id="flowChart"></canvas></div>
-    <div class="chart-card"><canvas id="vibrationChart"></canvas></div>
+        <div class="chart-card">
+          <div class="chart-title">
+            <span style="color:var(--red);">🌡 Temperature (°C)</span>
+            <span class="chart-thresh-label">THRESHOLD: 50°C</span>
+          </div>
+          <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+        </div>
 
-</section>
+        <div class="chart-card">
+          <div class="chart-title">
+            <span style="color:var(--yellow);">⚡ Motor Current (A)</span>
+            <span class="chart-thresh-label">THRESHOLD: 1.8A</span>
+          </div>
+          <div class="chart-wrap"><canvas id="currentChart"></canvas></div>
+        </div>
 
-<!-- FAULT HISTORY -->
-<h2 class="log-title">Fault History</h2>
+        <div class="chart-card">
+          <div class="chart-title">
+            <span style="color:var(--cyan);">💧 Flow Rate (L/min)</span>
+            <span class="chart-thresh-label">RANGE: 1–15 L/min</span>
+          </div>
+          <div class="chart-wrap"><canvas id="flowChart"></canvas></div>
+        </div>
 
-<table id="faultTable">
+        <div class="chart-card">
+          <div class="chart-title">
+            <span style="color:var(--purple);">📳 Vibration</span>
+            <span class="chart-thresh-label">THRESHOLD: 10</span>
+          </div>
+          <div class="chart-wrap"><canvas id="vibrationChart"></canvas></div>
+        </div>
 
-<thead>
-<tr>
-<th>Time</th>
-<th>Fault</th>
-</tr>
-</thead>
+      </div>
+    </div>
 
-<tbody></tbody>
+    <!-- ── FAULT LOG ── -->
+    <div>
+      <div class="fault-panel">
+        <div class="fault-header">
+          <div class="fault-title">🗂 Fault Log</div>
+          <div class="fault-count" id="faultCountBadge">0 EVENTS</div>
+        </div>
+        <table class="fault-table" id="faultTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Fault Description</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-</table>
+  </main>
 
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
