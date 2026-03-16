@@ -6,7 +6,7 @@
   <title>FuelGuard — Dispenser Command Center</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -63,7 +63,7 @@
 
         <div class="kpi-card" style="--kc: var(--green)">
           <div class="kpi-label">Health Score</div>
-          <div class="kpi-val" id="healthScoreValue">100<span class="kpi-unit">%</span></div>
+          <div class="kpi-val" id="healthScoreValue">0<span class="kpi-unit">%</span></div>
           <div class="kpi-hint" id="healthHint">Rule-based Engine</div>
         </div>
 
@@ -82,7 +82,7 @@
 
         <div class="kpi-card" style="--kc: var(--yellow)">
           <div class="kpi-label">Est. Remaining Useful Life</div>
-          <div class="kpi-val" id="rulValue">--<span class="kpi-unit">hr</span></div>
+          <div class="kpi-val" id="rulValue">0<span class="kpi-unit">hr</span></div>
           <div class="kpi-hint">Degradation Model</div>
         </div>
 
@@ -115,7 +115,7 @@
           <div class="hp-top">
             <div>
               <div class="hp-label">HEALTH SCORE</div>
-              <div class="hp-score" id="healthScoreBar">100%</div>
+              <div class="hp-score" id="healthScoreBar">0%</div>
             </div>
             <div style="text-align:right;">
               <div class="hp-label">STATUS</div>
@@ -125,7 +125,7 @@
             </div>
           </div>
           <div class="progress-track">
-            <div id="healthBar"></div>
+            <div id="healthBar" style="width:0%"></div>
           </div>
           <div class="rul-row">
             <span>REMAINING USEFUL LIFE</span>
@@ -247,6 +247,16 @@
     </div>
 
   </main>
+
+  <!-- ═══════════════════════════════════════
+       DATABASE BUTTON (fixed, bottom-right)
+  ═══════════════════════════════════════ -->
+  <button class="db-btn" onclick="openDatabase()" title="Open Live Data Table">
+    🗄 DATABASE
+  </button>
+
+  <!-- Toast -->
+  <div id="toast"></div>
 
   <script src="script.js"></script>
 </body>
