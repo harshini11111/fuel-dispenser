@@ -14,16 +14,23 @@ function setMode(newMode) {
   mode = newMode;
   document.getElementById("modeLabel").textContent = mode.toUpperCase();
 
-  // Highlight active button
   document.getElementById("btn-live").classList.remove("active-mode");
   document.getElementById("btn-demo").classList.remove("active-mode");
   document.getElementById("btn-" + mode).classList.add("active-mode");
 
-  // Toast instead of alert()
   if (mode === "live")
     showToast("⚡ LIVE MODE — ESP32 hardware data active");
   else
     showToast("🔵 DEMO MODE — Simulated random data active");
+}
+
+
+// ═══════════════════════════════════════
+// DATABASE BUTTON — open data table page
+// ═══════════════════════════════════════
+
+function openDatabase() {
+  window.location.href = "database.html";
 }
 
 
@@ -34,7 +41,6 @@ function setMode(newMode) {
 function showToast(msg) {
   let toast = document.getElementById("toast");
 
-  // Create if it doesn't exist yet
   if (!toast) {
     toast = document.createElement("div");
     toast.id = "toast";
@@ -68,19 +74,18 @@ updateClock();
 // DATA ARRAYS
 // ═══════════════════════════════════════
 
-let labels       = [];
-let tempData     = [];
-let currentData  = [];
-let flowData     = [];
+let labels        = [];
+let tempData      = [];
+let currentData   = [];
+let flowData      = [];
 let vibrationData = [];
-let faultHistory = [];
+let faultHistory  = [];
 
 const MAX_POINTS = 10;
 
 
 // ═══════════════════════════════════════
 // CHART FACTORY
-// Each chart has a data line + optional dashed threshold line
 // ═══════════════════════════════════════
 
 const sharedChartOptions = {
@@ -125,18 +130,17 @@ function createChart(canvasId, label, dataArray, lineColor, thresholdValue) {
       borderColor: lineColor,
       borderWidth: 2,
       fill: true,
-      backgroundColor: lineColor + "18",   // 10% opacity fill
+      backgroundColor: lineColor + "18",
       tension: 0.4,
       pointRadius: 2,
       pointBackgroundColor: lineColor,
     },
   ];
 
-  // Add dashed threshold line only when a value is given
   if (thresholdValue !== undefined) {
     datasets.push({
       label: "Threshold",
-      data: [],                              // filled dynamically
+      data: [],
       borderColor: "rgba(255,34,68,0.45)",
       borderWidth: 1,
       borderDash: [6, 3],
@@ -155,12 +159,12 @@ function createChart(canvasId, label, dataArray, lineColor, thresholdValue) {
 
 const tempChart      = createChart("tempChart",      "Temperature (°C)", tempData,      "#ff6666", 50);
 const currentChart   = createChart("currentChart",   "Current (A)",       currentData,   "#ffcc00", 1.8);
-const flowChart      = createChart("flowChart",       "Flow Rate (L/m)",  flowData,      "#00d4ff");      // no threshold line
+const flowChart      = createChart("flowChart",       "Flow Rate (L/m)",  flowData,      "#00d4ff");
 const vibrationChart = createChart("vibrationChart", "Vibration",         vibrationData, "#aa88ff", 10);
 
 
 // ═══════════════════════════════════════
-// FAILURE PROBABILITY GAUGE (half doughnut)
+// FAILURE PROBABILITY GAUGE
 // ═══════════════════════════════════════
 
 const gauge = new Chart(document.getElementById("probabilityGauge"), {
@@ -186,15 +190,13 @@ const gauge = new Chart(document.getElementById("probabilityGauge"), {
 
 
 // ═══════════════════════════════════════
-// SENSOR CARD COLOUR  (green / yellow / red)
-// Maps to CSS classes and status pill text
+// SENSOR CARD COLOUR
 // ═══════════════════════════════════════
 
 function setBox(boxId, value, greenLimit, redLimit) {
   const box = document.getElementById(boxId);
   box.classList.remove("green", "yellow", "red");
 
-  // Pill element id follows pattern: tempBox → tempPill, currentBox → currentPill, etc.
   const pillId = boxId.replace("Box", "Pill");
   const pill   = document.getElementById(pillId === "vibPill" ? "vibPill" : pillId);
 
@@ -222,7 +224,6 @@ function setBox(boxId, value, greenLimit, redLimit) {
   }
 }
 
-// Flow has a range check (not just a max threshold)
 function setFlowBox(flow) {
   const box  = document.getElementById("flowBox");
   const pill = document.getElementById("flowPill");
@@ -240,23 +241,23 @@ function setFlowBox(flow) {
 
 
 // ═══════════════════════════════════════
-// HEALTH SCORE  (rule-based, 0–100)
+// HEALTH SCORE
 // ═══════════════════════════════════════
 
 function calculateHealthScore(t, c, f, v) {
   let score = 100;
 
-  if (t > 50)             score -= 30;   // temperature too high
-  if (c > 1.8)            score -= 25;   // current overload
-  if (f <= 1 || f > 15)   score -= 25;   // flow out of range
-  if (v > 0.06)           score -= 20;   // vibration too high
+  if (t > 50)             score -= 30;
+  if (c > 1.8)            score -= 25;
+  if (f <= 1 || f > 15)   score -= 25;
+  if (v > 0.06)           score -= 20;
 
   return Math.max(score, 0);
 }
 
 
 // ═══════════════════════════════════════
-// ALERT TICKER  (scrolling headline bar)
+// ALERT TICKER
 // ═══════════════════════════════════════
 
 function updateAlertTicker(failures) {
@@ -270,7 +271,7 @@ function updateAlertTicker(failures) {
 
 
 // ═══════════════════════════════════════
-// HEALTH DISPLAY  (status boxes + fault tracking)
+// HEALTH DISPLAY
 // ═══════════════════════════════════════
 
 function updateHealth(t, c, f, v) {
@@ -285,14 +286,12 @@ function updateHealth(t, c, f, v) {
   container.innerHTML = "";
 
   if (failures.length > 0) {
-    // Render one red box per fault
     failures.forEach(fault => {
       const div = document.createElement("div");
-      div.className   = "failure-box";
-      div.innerHTML   = "⛔ " + fault;
+      div.className = "failure-box";
+      div.innerHTML = "⛔ " + fault;
       container.appendChild(div);
 
-      // Log every new fault into history
       faultHistory.push({ time: getTime(), fault, sev: "high" });
     });
 
@@ -306,8 +305,8 @@ function updateHealth(t, c, f, v) {
 
   } else {
     const div = document.createElement("div");
-    div.className   = "healthy-box";
-    div.innerHTML   = "✅ SYSTEM HEALTHY — All parameters within safe operating limits";
+    div.className = "healthy-box";
+    div.innerHTML = "✅ SYSTEM HEALTHY — All parameters within safe operating limits";
     container.appendChild(div);
 
     document.getElementById("activeFaults").textContent        = "0";
@@ -323,7 +322,6 @@ function updateHealth(t, c, f, v) {
 
 // ═══════════════════════════════════════
 // FAULT TABLE
-// Shows last 10 faults, newest first
 // ═══════════════════════════════════════
 
 function updateFaultTable() {
@@ -347,8 +345,7 @@ function updateFaultTable() {
 
 
 // ═══════════════════════════════════════
-// RUL  (Remaining Useful Life estimate)
-// Simple linear degradation from threshold
+// RUL
 // ═══════════════════════════════════════
 
 function estimateRUL(value, threshold) {
@@ -359,7 +356,6 @@ function estimateRUL(value, threshold) {
 
 // ═══════════════════════════════════════
 // THRESHOLD LINES
-// Keep the dashed red threshold lines in sync with the rolling window
 // ═══════════════════════════════════════
 
 function syncThresholdLines() {
@@ -376,15 +372,13 @@ function syncThresholdLines() {
 
 
 // ═══════════════════════════════════════
-// MAIN UPDATE  (called every 1 second)
-// Fetches from API or falls back to simulation
+// MAIN UPDATE
 // ═══════════════════════════════════════
 
 async function updateDashboard() {
   let temperature, current, flow, vibration, failure_probability;
 
   try {
-    // ── API CALL ──────────────────────────
     const apiURL = mode === "live"
       ? "https://fuel-dispenser.onrender.com/api/data"
       : "https://fuel-dispenser.onrender.com/api/demo";
@@ -396,7 +390,7 @@ async function updateDashboard() {
     failure_probability = data.failure_probability ?? Math.random();
 
   } catch (e) {
-    // ── SIMULATION FALLBACK (API offline) ─
+    // Simulation fallback
     temperature         = +(40 + Math.random() * 15).toFixed(1);
     current             = +(1  + Math.random() * 1.2).toFixed(2);
     flow                = +(2  + Math.random() * 12).toFixed(2);
@@ -404,25 +398,25 @@ async function updateDashboard() {
     failure_probability = Math.random() * 0.5;
   }
 
-  // ── SENSOR VALUE TEXT ──────────────────
+  // Sensor value text
   document.getElementById("tempVal").textContent    = temperature;
   document.getElementById("currentVal").textContent = current;
   document.getElementById("flowVal").textContent    = flow;
   document.getElementById("vibVal").textContent     = vibration;
 
-  // ── SENSOR PROGRESS BARS ───────────────
+  // Sensor progress bars
   document.getElementById("tempBar").style.width      = Math.min(100, temperature / 60 * 100) + "%";
   document.getElementById("currentBar").style.width   = Math.min(100, current    / 2  * 100) + "%";
   document.getElementById("flowBar").style.width      = Math.min(100, flow       / 20 * 100) + "%";
   document.getElementById("vibrationBar").style.width = Math.min(100, vibration  / 20 * 100) + "%";
 
-  // ── SENSOR CARD COLOURS ────────────────
+  // Sensor card colours
   setBox("tempBox",      temperature, 45,  50);
   setBox("currentBox",   current,     1.5, 1.8);
   setBox("vibrationBox", vibration,   10,  20);
   setFlowBox(flow);
 
-  // ── HEALTH SCORE ───────────────────────
+  // Health
   updateHealth(temperature, current, flow, vibration);
 
   const hs = calculateHealthScore(temperature, current, flow, vibration);
@@ -436,7 +430,7 @@ async function updateDashboard() {
   document.getElementById("healthScoreValue").textContent = hs + "%";
   document.getElementById("healthScoreBar").textContent   = hs + "%";
 
-  // ── FAILURE PROBABILITY GAUGE ──────────
+  // Failure probability gauge
   const prob = +(failure_probability * 100).toFixed(1);
 
   gauge.data.datasets[0].data             = [prob, 100 - prob];
@@ -452,12 +446,12 @@ async function updateDashboard() {
     prob < 60 ? "var(--yellow)" :
                 "var(--red)";
 
-  // ── RUL ───────────────────────────────
+  // RUL
   const rul = estimateRUL(temperature, 50);
   document.getElementById("rulValue").innerHTML = rul + '<span class="kpi-unit"> hr</span>';
   document.getElementById("rulBar").textContent = rul + " hr";
 
-  // ── CHART ROLLING WINDOW ───────────────
+  // Chart rolling window
   const t = getTime();
   labels.push(t);
   tempData.push(temperature);
@@ -473,7 +467,6 @@ async function updateDashboard() {
     vibrationData.shift();
   }
 
-  // Keep threshold lines the right length then redraw
   syncThresholdLines();
   tempChart.update();
   currentChart.update();
@@ -481,19 +474,15 @@ async function updateDashboard() {
   vibrationChart.update();
 }
 
-// ═══════════════════════════════════════
-// INITIAL VALUES (Dashboard starts with 0)
-// ═══════════════════════════════════════
-
-document.getElementById("tempVal").textContent = 0;
+// ── INITIAL VALUES ─────────────────────
+document.getElementById("tempVal").textContent    = 0;
 document.getElementById("currentVal").textContent = 0;
-document.getElementById("flowVal").textContent = 0;
-document.getElementById("vibVal").textContent = 0;
-
+document.getElementById("flowVal").textContent    = 0;
+document.getElementById("vibVal").textContent     = 0;
 document.getElementById("healthScoreValue").textContent = "0%";
-document.getElementById("gaugeNum").textContent = "0";
+document.getElementById("gaugeNum").textContent         = "0";
 document.getElementById("rulValue").innerHTML = '0<span class="kpi-unit"> hr</span>';
 
-// ── KICK OFF ──────────────────────────
+// ── KICK OFF ───────────────────────────
 setInterval(updateDashboard, 1000);
 updateDashboard();
