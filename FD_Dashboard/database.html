@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuelGuard — Live Data Table</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@400;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:      #050a12;
+    --bg-card: #0c1624;
+    --cyan:    #00d4ff;
+    --green:   #00ff88;
+    --yellow:  #ffcc00;
+    --red:     #ff2244;
+    --txt1:    #e8f4ff;
+    --txt2:    #7a9bbf;
+    --txtd:    #3a5570;
+    --bdr:     #132540;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--txt1);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,100,180,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,100,180,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(0,100,200,0.07), transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,10,18,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--bdr);
+    padding: 0 32px; height: 66px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .topbar::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.4;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--cyan), #0088ff);
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 0 20px rgba(0,212,255,0.35);
+  }
+
+  .logo-name {
+    font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+    letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--cyan), #fff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .logo-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--txtd); letter-spacing: 3px;
+  }
+
+  .page-title { text-align: center; }
+
+  .pt-main {
+    font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 600;
+    letter-spacing: 4px; color: var(--cyan);
+  }
+
+  .pt-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--txtd); letter-spacing: 2px; margin-top: 2px;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  /* ── MODE BUTTONS ── */
+  .mode-btn {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid;
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+  }
+
+  .mode-btn.live {
+    background: rgba(0,255,136,0.10); border-color: rgba(0,255,136,0.30); color: var(--green);
+  }
+  .mode-btn.live:hover, .mode-btn.live.active-mode {
+    background: rgba(0,255,136,0.20); box-shadow: 0 0 18px rgba(0,255,136,0.3);
+    outline: 2px solid var(--green); outline-offset: 2px;
+  }
+
+  .mode-btn.demo {
+    background: rgba(0,212,255,0.10); border-color: rgba(0,212,255,0.30); color: var(--cyan);
+  }
+  .mode-btn.demo:hover, .mode-btn.demo.active-mode {
+    background: rgba(0,212,255,0.20); box-shadow: 0 0 18px rgba(0,212,255,0.3);
+    outline: 2px solid var(--cyan); outline-offset: 2px;
+  }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 20px; padding: 4px 12px;
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    color: var(--green); letter-spacing: 1px;
+    transition: all 0.3s;
+  }
+
+  .live-badge.demo-badge {
+    background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.25); color: var(--cyan);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px rgba(0,255,136,0.5);
+    animation: pdot 1.5s infinite;
+  }
+
+  @keyframes pdot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .back-btn {
+    padding: 7px 16px; border-radius: 7px;
+    border: 1px solid rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.08); color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover {
+    background: rgba(0,212,255,0.18); box-shadow: 0 0 14px rgba(0,212,255,0.3);
+  }
+
+  .export-btn {
+    padding: 7px 16px; border-radius: 7px;
+    border: 1px solid rgba(0,255,136,0.3);
+    background: rgba(0,255,136,0.07); color: var(--green);
+    font-family: 'Share Tech Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s;
+  }
+  .export-btn:hover {
+    background: rgba(0,255,136,0.15); box-shadow: 0 0 12px rgba(0,255,136,0.25);
+  }
+
+  .clock {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px; color: var(--cyan); letter-spacing: 1px; min-width: 72px;
+  }
+
+  /* ── ALERT BANNER ── */
+  .mode-banner {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 32px;
+    font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    border-bottom: 1px solid;
+    position: relative; z-index: 1;
+    transition: all 0.3s;
+  }
+  .mode-banner.live-banner {
+    background: rgba(0,255,136,0.05); border-color: rgba(0,255,136,0.15); color: var(--green);
+  }
+  .mode-banner.demo-banner {
+    background: rgba(0,212,255,0.05); border-color: rgba(0,212,255,0.15); color: var(--cyan);
+  }
+  .banner-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; animation: pdot 1.5s infinite; flex-shrink: 0;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    position: relative; z-index: 1;
+    padding: 24px 32px; display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* ── SUMMARY CARDS ── */
+  .summary-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+
+  .sum-card {
+    background: var(--bg-card); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 14px 18px;
+    position: relative; overflow: hidden;
+  }
+  .sum-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--sc, var(--cyan));
+  }
+  .sum-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 8px;
+    letter-spacing: 2px; color: var(--txtd); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .sum-val {
+    font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700;
+    color: var(--sc, var(--cyan)); line-height: 1;
+  }
+  .sum-sub {
+    font-family: 'Share Tech Mono', monospace; font-size: 8px; color: var(--txtd); margin-top: 4px;
+  }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-card); border: 1px solid var(--bdr);
+    border-radius: 10px; padding: 12px 20px; gap: 20px;
+  }
+  .sb-item { display: flex; align-items: center; gap: 8px; font-family: 'Share Tech Mono', monospace; font-size: 10px; }
+  .sb-label { color: var(--txtd); letter-spacing: 2px; }
+  .sb-val   { color: var(--txt1); letter-spacing: 1px; }
+  .sb-val.ok   { color: var(--green); }
+  .sb-val.demo { color: var(--cyan); }
+  .sb-val.fail { color: var(--red); }
+  .sep { width: 1px; height: 24px; background: var(--bdr); }
+
+  .refresh-info {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    color: var(--txtd); letter-spacing: 1px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pdot 2s infinite; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--bg-card); border: 1px solid var(--bdr);
+    border-radius: 12px; overflow: hidden;
+  }
+  .table-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--bdr);
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(15,29,46,0.5);
+  }
+  .table-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600;
+    letter-spacing: 3px; color: var(--txt1); text-transform: uppercase;
+  }
+
+  .filter-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--txtd); letter-spacing: 2px; }
+  .filter-btn {
+    padding: 5px 12px; border-radius: 5px; border: 1px solid var(--bdr);
+    background: transparent; color: var(--txtd);
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,0.08); }
+  .filter-btn.active.warn { border-color: var(--yellow); color: var(--yellow); background: rgba(255,204,0,0.08); }
+  .filter-btn.active.crit { border-color: var(--red);    color: var(--red);    background: rgba(255,34,68,0.08); }
+
+  .row-count { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--txtd); letter-spacing: 1px; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr { background: rgba(15,29,46,0.8); border-bottom: 2px solid rgba(0,212,255,0.2); }
+  th {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; color: var(--txtd); text-transform: uppercase;
+    padding: 12px 18px; text-align: left; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid rgba(19,37,64,0.5); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr.newest { background: rgba(0,212,255,0.04); border-left: 2px solid rgba(0,212,255,0.4); }
+  tbody tr.newest td { color: var(--txt1); }
+  td {
+    padding: 11px 18px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    color: var(--txt2); white-space: nowrap;
+  }
+  td.row-num { color: var(--txtd); font-size: 9px; width: 40px; }
+
+  .v-ok   { color: var(--green);  font-weight: 600; }
+  .v-warn { color: var(--yellow); font-weight: 600; }
+  .v-crit { color: var(--red);    font-weight: 600; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 4px;
+    font-size: 9px; letter-spacing: 1px; font-weight: 600;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .badge.ok   { background: rgba(0,255,136,0.10); color: var(--green);  border: 1px solid rgba(0,255,136,0.25); }
+  .badge.warn { background: rgba(255,204,0,0.10);  color: var(--yellow); border: 1px solid rgba(255,204,0,0.25); }
+  .badge.crit { background: rgba(255,34,68,0.10);  color: var(--red);    border: 1px solid rgba(255,34,68,0.30); animation: blink 1s infinite; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .empty-row td { text-align: center; color: var(--txtd); padding: 48px; font-size: 11px; letter-spacing: 2px; }
+
+  /* ── TOAST ── */
+  #dbToast {
+    position: fixed; bottom: 30px; right: 24px; z-index: 9999;
+    background: #0c1624; border: 1px solid rgba(0,212,255,0.3);
+    color: #00d4ff; border-radius: 10px; padding: 12px 20px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; box-shadow: 0 0 20px rgba(0,212,255,0.2);
+    transition: opacity 0.4s; opacity: 0; pointer-events: none;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-icon">⛽</div>
+      <div>
+        <div class="logo-name">FUELGUARD</div>
+        <div class="logo-sub">Live Data Table</div>
+      </div>
+    </div>
+
+    <div class="page-title">
+      <div class="pt-main">DATABASE — RAW SENSOR LOG</div>
+      <div class="pt-sub">INDIAN OIL · STN-047 · UNIT-1 · AUTO-REFRESH 2s</div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Mode toggle buttons — same as dashboard -->
+      <button class="mode-btn live" id="btn-live" onclick="setMode('live')">⚡ LIVE</button>
+      <button class="mode-btn demo active-mode" id="btn-demo" onclick="setMode('demo')">🔵 DEMO</button>
+
+      <div class="live-badge" id="modeBadge">
+        <div class="live-dot" id="connDot"></div>
+        <span id="connLabel">DEMO</span>
+      </div>
+
+      <button class="export-btn" onclick="exportCSV()">⬇ EXPORT CSV</button>
+      <button class="back-btn" onclick="window.location.href='index.html'">← DASHBOARD</button>
+      <div class="clock" id="dbClock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- MODE BANNER -->
+  <div class="mode-banner demo-banner" id="modeBanner">
+    <div class="banner-dot"></div>
+    <span id="bannerText">DEMO MODE — Simulated sensor data · No hardware connection required</span>
+  </div>
+
+  <main class="main">
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+      <div class="sum-card" style="--sc: var(--cyan)">
+        <div class="sum-label">Total Readings</div>
+        <div class="sum-val" id="totalReadings">0</div>
+        <div class="sum-sub">Session records</div>
+      </div>
+      <div class="sum-card" style="--sc: var(--green)">
+        <div class="sum-label">Healthy Readings</div>
+        <div class="sum-val" id="healthyCount">0</div>
+        <div class="sum-sub">Health = OK</div>
+      </div>
+      <div class="sum-card" style="--sc: var(--yellow)">
+        <div class="sum-label">Warning Events</div>
+        <div class="sum-val" id="warnCount">0</div>
+        <div class="sum-sub">Health = WARNING</div>
+      </div>
+      <div class="sum-card" style="--sc: var(--red)">
+        <div class="sum-label">Critical Events</div>
+        <div class="sum-val" id="critCount">0</div>
+        <div class="sum-sub">Health = CRITICAL</div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="sb-item">
+        <span class="sb-label">DATA SOURCE</span>
+        <span class="sb-val" id="sourceLabel">fuel-dispenser.onrender.com</span>
+      </div>
+      <div class="sep"></div>
+      <div class="sb-item">
+        <span class="sb-label">MODE</span>
+        <span class="sb-val demo" id="modeStatus">DEMO — SIMULATED</span>
+      </div>
+      <div class="sep"></div>
+      <div class="sb-item">
+        <span class="sb-label">API STATUS</span>
+        <span class="sb-val demo" id="apiStatus">DEMO</span>
+      </div>
+      <div class="sep"></div>
+      <div class="sb-item">
+        <span class="sb-label">LAST FETCH</span>
+        <span class="sb-val" id="lastFetch">--</span>
+      </div>
+      <div class="sep"></div>
+      <div class="sb-item">
+        <span class="sb-label">SHOWING</span>
+        <span class="sb-val" id="showingLabel">All rows</span>
+      </div>
+      <div class="sep"></div>
+      <div class="refresh-info">
+        <div class="refresh-dot"></div>
+        AUTO-REFRESH EVERY 2s
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-title">📊 Live Sensor Readings</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="filter-label">FILTER:</span>
+          <button class="filter-btn active" id="fAll"  onclick="setFilter('all')">ALL</button>
+          <button class="filter-btn"        id="fOk"   onclick="setFilter('ok')">● HEALTHY</button>
+          <button class="filter-btn warn"   id="fWarn" onclick="setFilter('warn')">▲ WARNING</button>
+          <button class="filter-btn crit"   id="fCrit" onclick="setFilter('crit')">⛔ CRITICAL</button>
+          <div class="row-count" id="rowCountLabel">0 readings</div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Temperature (°C)</th>
+              <th>Current (A)</th>
+              <th>Flow Rate (L/min)</th>
+              <th>Vibration</th>
+              <th>Fail Probability</th>
+              <th>Health Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr class="empty-row">
+              <td colspan="8">⏳ INITIALIZING DATA FEED...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="dbToast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  const LIVE_API_URL = "https://fuel-dispenser.onrender.com/api/data";
+  const DEMO_API_URL = "https://fuel-dispenser.onrender.com/api/demo";
+  const REFRESH_MS   = 2000;
+  const MAX_ROWS     = 200;
+
+  let rows         = [];
+  let activeFilter = "all";
+  let isLiveMode   = false;
+  let fetchTimer   = null;
+
+  // ── RESTORE MODE FROM SESSION STORAGE ───────────────────
+  // Written by index.html whenever the user switches mode there
+  const savedMode = sessionStorage.getItem("fuelguard_mode");
+  if (savedMode === "live") isLiveMode = true;
+
+  // ── TOAST ───────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById("dbToast");
+    t.textContent = msg;
+    t.style.opacity = "1";
+    setTimeout(() => { t.style.opacity = "0"; }, 3000);
+  }
+
+  // ── CLOCK ────────────────────────────────────────────────
+  setInterval(() => {
+    document.getElementById("dbClock").textContent =
+      new Date().toLocaleTimeString("en-IN", { hour12: false });
+  }, 1000);
+  document.getElementById("dbClock").textContent =
+    new Date().toLocaleTimeString("en-IN", { hour12: false });
+
+  // ── SET MODE ─────────────────────────────────────────────
+  function setMode(newMode) {
+    isLiveMode = (newMode === "live");
+    sessionStorage.setItem("fuelguard_mode", newMode);
+
+    // Button active states
+    document.getElementById("btn-live").classList.toggle("active-mode",  isLiveMode);
+    document.getElementById("btn-demo").classList.toggle("active-mode", !isLiveMode);
+
+    // Badge
+    const badge = document.getElementById("modeBadge");
+    const dot   = document.getElementById("connDot");
+    const label = document.getElementById("connLabel");
+    if (isLiveMode) {
+      badge.className = "live-badge";
+      dot.style.background = "var(--green)";
+      label.textContent = "LIVE";
+    } else {
+      badge.className = "live-badge demo-badge";
+      dot.style.background = "var(--cyan)";
+      label.textContent = "DEMO";
+    }
+
+    // Banner
+    const banner = document.getElementById("modeBanner");
+    const bannerText = document.getElementById("bannerText");
+    if (isLiveMode) {
+      banner.className = "mode-banner live-banner";
+      bannerText.textContent = "⚡ LIVE MODE — Real-time ESP32 hardware data active · Fetching from API every 2s";
+    } else {
+      banner.className = "mode-banner demo-banner";
+      bannerText.textContent = "🔵 DEMO MODE — Simulated sensor data · No hardware connection required";
+    }
+
+    // Status bar mode field
+    const modeStatus = document.getElementById("modeStatus");
+    if (isLiveMode) {
+      modeStatus.textContent = "LIVE — ESP32";
+      modeStatus.className   = "sb-val ok";
+    } else {
+      modeStatus.textContent = "DEMO — SIMULATED";
+      modeStatus.className   = "sb-val demo";
+    }
+
+    // Reset & restart fetch loop
+    rows = [];
+    renderTable();
+    updateSummary();
+    fetchData();
+
+    showToast(isLiveMode ? "⚡ LIVE MODE — ESP32 hardware data active" : "🔵 DEMO MODE — Simulated data active");
+  }
+
+  // Apply initial mode UI without resetting rows
+  function applyInitialModeUI() {
+    document.getElementById("btn-live").classList.toggle("active-mode",  isLiveMode);
+    document.getElementById("btn-demo").classList.toggle("active-mode", !isLiveMode);
+
+    const badge = document.getElementById("modeBadge");
+    const dot   = document.getElementById("connDot");
+    const label = document.getElementById("connLabel");
+    const banner = document.getElementById("modeBanner");
+    const bannerText = document.getElementById("bannerText");
+    const modeStatus = document.getElementById("modeStatus");
+
+    if (isLiveMode) {
+      badge.className   = "live-badge";
+      dot.style.background = "var(--green)";
+      label.textContent = "LIVE";
+      banner.className  = "mode-banner live-banner";
+      bannerText.textContent = "⚡ LIVE MODE — Real-time ESP32 hardware data active · Fetching from API every 2s";
+      modeStatus.textContent = "LIVE — ESP32";
+      modeStatus.className   = "sb-val ok";
+    } else {
+      badge.className   = "live-badge demo-badge";
+      dot.style.background = "var(--cyan)";
+      label.textContent = "DEMO";
+      banner.className  = "mode-banner demo-banner";
+      bannerText.textContent = "🔵 DEMO MODE — Simulated sensor data · No hardware connection required";
+      modeStatus.textContent = "DEMO — SIMULATED";
+      modeStatus.className   = "sb-val demo";
+    }
+  }
+  applyInitialModeUI();
+
+  // ── COLOUR HELPERS ────────────────────────────────────────
+  function tempClass(v)    { return v > 50  ? "v-crit" : v > 45  ? "v-warn" : "v-ok"; }
+  function currentClass(v) { return v > 1.8 ? "v-crit" : v > 1.5 ? "v-warn" : "v-ok"; }
+  function flowClass(v)    { return (v <= 1 || v > 15) ? "v-crit" : "v-ok"; }
+  function vibClass(v)     { return v > 20  ? "v-crit" : v > 10  ? "v-warn" : "v-ok"; }
+  function probClass(v)    { return v > 0.6 ? "v-crit" : v > 0.3 ? "v-warn" : "v-ok"; }
+
+  function healthBadge(h) {
+    if (h === 2) return '<span class="badge crit">⛔ FAILURE</span>';
+    if (h === 1) return '<span class="badge warn">▲ WARNING</span>';
+    return '<span class="badge ok">● HEALTHY</span>';
+  }
+
+  function healthKey(h) { return h === 2 ? "crit" : h === 1 ? "warn" : "ok"; }
+
+  // ── DERIVE HEALTH FROM SENSORS ───────────────────────────
+  function deriveHealth(t, c, f, v) {
+    if (t > 50 || c > 1.8 || f <= 1 || f > 15 || v > 20) return 2;
+    if (t > 45 || c > 1.5 || v > 10)                      return 1;
+    return 0;
+  }
+
+  // ── FILTER ───────────────────────────────────────────────
+  function setFilter(f) {
+    activeFilter = f;
+    ["fAll","fOk","fWarn","fCrit"].forEach(id =>
+      document.getElementById(id).classList.remove("active")
+    );
+    const map = { all:"fAll", ok:"fOk", warn:"fWarn", crit:"fCrit" };
+    document.getElementById(map[f]).classList.add("active");
+    document.getElementById("showingLabel").textContent =
+      f === "all"  ? "All rows"       :
+      f === "ok"   ? "Healthy only"   :
+      f === "warn" ? "Warnings only"  : "Critical only";
+    renderTable();
+  }
+
+  // ── SUMMARY ──────────────────────────────────────────────
+  function updateSummary() {
+    document.getElementById("totalReadings").textContent = rows.length;
+    document.getElementById("healthyCount").textContent  = rows.filter(r => r.health === 0).length;
+    document.getElementById("warnCount").textContent     = rows.filter(r => r.health === 1).length;
+    document.getElementById("critCount").textContent     = rows.filter(r => r.health === 2).length;
+  }
+
+  // ── RENDER TABLE ─────────────────────────────────────────
+  function renderTable() {
+    const tbody    = document.getElementById("tableBody");
+    const filtered = activeFilter === "all" ? rows
+      : rows.filter(r => healthKey(r.health) === activeFilter);
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">NO DATA MATCHES THIS FILTER</td></tr>';
+      document.getElementById("rowCountLabel").textContent = "0 readings";
+      return;
+    }
+
+    const display = filtered.slice().reverse();
+    tbody.innerHTML = display.map((r, i) => `
+      <tr class="${i === 0 ? "newest" : ""}">
+        <td class="row-num">${filtered.length - i}</td>
+        <td>${r.timestamp}</td>
+        <td class="${tempClass(r.temperature)}">${r.temperature}</td>
+        <td class="${currentClass(r.current)}">${r.current}</td>
+        <td class="${flowClass(r.flow)}">${r.flow}</td>
+        <td class="${vibClass(r.vibration)}">${r.vibration}</td>
+        <td class="${probClass(r.failure_probability)}">${(r.failure_probability * 100).toFixed(1)}%</td>
+        <td>${healthBadge(r.health)}</td>
+      </tr>`).join("");
+
+    document.getElementById("rowCountLabel").textContent = filtered.length + " readings";
+  }
+
+  // ── SIMULATION FALLBACK ───────────────────────────────────
+  function simulateReading() {
+    const temperature         = +(40 + Math.random() * 15).toFixed(1);
+    const current             = +(1  + Math.random() * 1.2).toFixed(2);
+    const flow                = +(2  + Math.random() * 12).toFixed(2);
+    const vibration           = +(Math.random() * 0.15).toFixed(3);
+    const failure_probability = Math.random() * 0.5;
+    const health              = deriveHealth(+temperature, +current, +flow, +vibration);
+    return { temperature, current, flow, vibration, failure_probability, health,
+             timestamp: new Date().toLocaleTimeString("en-IN", { hour12: false }) };
+  }
+
+  // ── SET CONNECTION UI ─────────────────────────────────────
+  function setConnUI(state) {
+    // state: "live_ok" | "live_fail" | "demo"
+    const dot   = document.getElementById("connDot");
+    const label = document.getElementById("connLabel");
+    const api   = document.getElementById("apiStatus");
+
+    if (state === "live_ok") {
+      dot.style.background = "#00ff88";
+      label.textContent    = "ESP32 CONNECTED";
+      label.style.color    = "";
+      api.textContent      = "ONLINE";
+      api.className        = "sb-val ok";
+    } else if (state === "live_fail") {
+      dot.style.background = "#ff2244";
+      label.textContent    = "SERVER OFFLINE";
+      label.style.color    = "#ff2244";
+      api.textContent      = "OFFLINE → DEMO";
+      api.className        = "sb-val fail";
+    } else {
+      dot.style.background = "#00d4ff";
+      label.textContent    = "DEMO";
+      label.style.color    = "";
+      api.textContent      = "DEMO";
+      api.className        = "sb-val demo";
+    }
+    document.getElementById("lastFetch").textContent = new Date().toLocaleTimeString();
+  }
+
+  // ── PUSH ROW ─────────────────────────────────────────────
+  function pushRow(data) {
+    rows.push(data);
+    if (rows.length > MAX_ROWS) rows.shift();
+    renderTable();
+    updateSummary();
+  }
+
+  // ── FETCH / SIMULATE ─────────────────────────────────────
+  async function fetchData() {
+    if (isLiveMode) {
+      try {
+        const res  = await fetch(LIVE_API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+
+        const temperature         = parseFloat(data.temperature).toFixed(1);
+        const current             = parseFloat(data.current).toFixed(2);
+        const flow                = parseFloat(data.flow).toFixed(2);
+        const vibration           = parseFloat(data.vibration).toFixed(3);
+        const failure_probability = parseFloat(data.failure_probability) || 0;
+        const health              = parseInt(data.health) || deriveHealth(+temperature, +current, +flow, +vibration);
+        const timestamp           = data.timestamp || new Date().toLocaleTimeString();
+
+        pushRow({ timestamp, temperature, current, flow, vibration, failure_probability, health });
+        setConnUI("live_ok");
+        return;
+      } catch (err) {
+        setConnUI("live_fail");
+        // Fall through to simulation
+      }
+    } else {
+      // Demo mode — try demo API first, fall back to local simulation
+      try {
+        const res  = await fetch(DEMO_API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+
+        const temperature         = parseFloat(data.temperature).toFixed(1);
+        const current             = parseFloat(data.current).toFixed(2);
+        const flow                = parseFloat(data.flow).toFixed(2);
+        const vibration           = parseFloat(data.vibration).toFixed(3);
+        const failure_probability = parseFloat(data.failure_probability ?? Math.random() * 0.5);
+        const health              = deriveHealth(+temperature, +current, +flow, +vibration);
+        const timestamp           = data.timestamp || new Date().toLocaleTimeString();
+
+        pushRow({ timestamp, temperature, current, flow, vibration, failure_probability, health });
+        setConnUI("demo");
+        return;
+      } catch (err) {
+        setConnUI("demo");
+      }
+    }
+
+    // Local simulation fallback
+    pushRow(simulateReading());
+  }
+
+  // ── EXPORT CSV ───────────────────────────────────────────
+  function exportCSV() {
+    if (rows.length === 0) { alert("No data to export."); return; }
+    const headers = ["#","Timestamp","Temperature(C)","Current(A)","Flow(L/min)","Vibration","FailureProbability","Health"];
+    const csvRows = rows.map((r, i) =>
+      [i+1, r.timestamp, r.temperature, r.current, r.flow, r.vibration,
+       (r.failure_probability * 100).toFixed(1) + "%",
+       r.health === 0 ? "HEALTHY" : r.health === 1 ? "WARNING" : "FAILURE"
+      ].join(",")
+    );
+    const blob = new Blob([[headers.join(","), ...csvRows].join("\n")], { type: "text/csv" });
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = `fuelguard_data_${new Date().toISOString().slice(0,19).replace(/:/g,"-")}.csv`;
+    a.click();
+  }
+
+  // ── START ────────────────────────────────────────────────
+  fetchData();
+  setInterval(fetchData, REFRESH_MS);
+</script>
+</body>
+</html>
