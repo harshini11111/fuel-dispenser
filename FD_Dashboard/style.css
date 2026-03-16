@@ -341,7 +341,6 @@ body::before {
   border-color: rgba(0, 212, 255, 0.25);
 }
 
-/* Colour accent line at top of each card */
 .kpi-card::before {
   content: '';
   position: absolute;
@@ -382,7 +381,7 @@ body::before {
   margin-top: 6px;
 }
 
-/* ── GAUGE CARD (Failure Probability) ── */
+/* ── GAUGE CARD ── */
 .gauge-card {
   background: var(--bg-card);
   border: 1px solid var(--bdr);
@@ -402,9 +401,7 @@ body::before {
   opacity: 0.85;
 }
 
-.gauge-card:hover {
-  transform: translateY(-2px);
-}
+.gauge-card:hover { transform: translateY(-2px); }
 
 .gauge-wrap {
   position: relative;
@@ -492,7 +489,6 @@ body::before {
   margin-top: 6px;
 }
 
-/* Pulsing green dot inside pump badge */
 .pump-badge .pd {
   width: 6px;
   height: 6px;
@@ -583,7 +579,6 @@ body::before {
   transition: all 0.3s;
 }
 
-/* Colour accent top line — driven by --sc variable */
 .sensor-card::before {
   content: '';
   position: absolute;
@@ -592,7 +587,6 @@ body::before {
   background: var(--sc, var(--cyan));
 }
 
-/* ── Sensor status colours ── */
 .sensor-card.green  { --sc: var(--green);  border-color: rgba(0, 255, 136, 0.25); }
 .sensor-card.yellow { --sc: var(--yellow); border-color: rgba(255, 204, 0, 0.25); animation: warnPulse 2s infinite; }
 .sensor-card.red    { --sc: var(--red);    border-color: rgba(255, 34, 68, 0.40); animation: critPulse 1.5s infinite; }
@@ -607,10 +601,7 @@ body::before {
   50%       { box-shadow: 0 0 25px rgba(255, 34, 68, 0.20); }
 }
 
-.sc-icon {
-  font-size: 22px;
-  margin-bottom: 6px;
-}
+.sc-icon { font-size: 22px; margin-bottom: 6px; }
 
 .sc-label {
   font-family: 'Share Tech Mono', monospace;
@@ -629,10 +620,7 @@ body::before {
   line-height: 1;
 }
 
-.sc-unit {
-  font-size: 13px;
-  color: var(--txt2);
-}
+.sc-unit { font-size: 13px; color: var(--txt2); }
 
 .sc-thresh {
   font-family: 'Share Tech Mono', monospace;
@@ -675,11 +663,7 @@ body::before {
 /* ═══════════════════════════════════════
    HEALTH STATUS BOXES
 ═══════════════════════════════════════ */
-.health-center {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.health-center { display: flex; flex-direction: column; gap: 8px; }
 
 .healthy-box {
   background: rgba(0, 255, 136, 0.08);
@@ -812,11 +796,8 @@ body::before {
   color: var(--txt2);
 }
 
-.fault-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
-}
+.fault-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
-/* ── Severity Badges ── */
 .sev-badge {
   padding: 2px 7px;
   border-radius: 3px;
@@ -830,11 +811,11 @@ body::before {
 .sev-badge.low  { background: rgba(0,   212, 255, 0.12); color: var(--cyan);   }
 
 /* ═══════════════════════════════════════
-   TOAST NOTIFICATION
+   TOAST
 ═══════════════════════════════════════ */
 #toast {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
   z-index: 9999;
   background: #0c1624;
@@ -857,3 +838,44 @@ body::before {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 2px; }
+
+/* ═══════════════════════════════════════
+   DATABASE BUTTON (fixed, bottom-right)
+═══════════════════════════════════════ */
+.db-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  padding: 11px 20px;
+  border-radius: 9px;
+  border: 1px solid var(--cyan);
+  background: #0c1624;
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.db-btn:hover {
+  background: rgba(0, 212, 255, 0.12);
+  box-shadow: 0 0 18px rgba(0, 212, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.db-btn::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: pdot 2s infinite;
+}
+
+
+
