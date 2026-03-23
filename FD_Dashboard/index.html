@@ -145,7 +145,7 @@
           <div class="sc-icon">🌡️</div>
           <div class="sc-label">Temperature</div>
           <div><span class="sc-value" id="tempVal">--</span><span class="sc-unit"> °C</span></div>
-          <div class="sc-thresh">MAX: 50°C · CRIT: 55°C</div>
+          <div class="sc-thresh">MAX: 45°C · CRIT: 55°C</div>
           <div class="sc-bar-wrap"><div class="sc-bar-fill" id="tempBar" style="width:0%"></div></div>
           <div class="sc-status-pill ok" id="tempPill">● NORMAL</div>
         </div>
@@ -154,7 +154,7 @@
           <div class="sc-icon">⚡</div>
           <div class="sc-label">Motor Current</div>
           <div><span class="sc-value" id="currentVal">--</span><span class="sc-unit"> A</span></div>
-          <div class="sc-thresh">MAX: 1.8A · CRIT: 2.5A</div>
+          <div class="sc-thresh">MAX: 1.5A · CRIT: 2.0A</div>
           <div class="sc-bar-wrap"><div class="sc-bar-fill" id="currentBar" style="width:0%"></div></div>
           <div class="sc-status-pill ok" id="currentPill">● NORMAL</div>
         </div>
@@ -172,7 +172,7 @@
           <div class="sc-icon">📳</div>
           <div class="sc-label">Vibration</div>
           <div><span class="sc-value" id="vibVal">--</span></div>
-          <div class="sc-thresh">MAX: 10 · CRIT: 20</div>
+          <div class="sc-thresh">MAX: 1.2 · CRIT: 2.0</div>
           <div class="sc-bar-wrap"><div class="sc-bar-fill" id="vibrationBar" style="width:0%"></div></div>
           <div class="sc-status-pill ok" id="vibPill">● NORMAL</div>
         </div>
@@ -194,7 +194,7 @@
         <div class="chart-card">
           <div class="chart-title">
             <span style="color:var(--red);">🌡 Temperature (°C)</span>
-            <span class="chart-thresh-label">THRESHOLD: 50°C</span>
+            <span class="chart-thresh-label">THRESHOLD: 55°C</span>
           </div>
           <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
         </div>
@@ -202,7 +202,7 @@
         <div class="chart-card">
           <div class="chart-title">
             <span style="color:var(--yellow);">⚡ Motor Current (A)</span>
-            <span class="chart-thresh-label">THRESHOLD: 1.8A</span>
+            <span class="chart-thresh-label">THRESHOLD: 1.5A</span>
           </div>
           <div class="chart-wrap"><canvas id="currentChart"></canvas></div>
         </div>
@@ -218,7 +218,7 @@
         <div class="chart-card">
           <div class="chart-title">
             <span style="color:var(--purple);">📳 Vibration</span>
-            <span class="chart-thresh-label">THRESHOLD: 10</span>
+            <span class="chart-thresh-label">THRESHOLD: 2.0</span>
           </div>
           <div class="chart-wrap"><canvas id="vibrationChart"></canvas></div>
         </div>
