@@ -118,6 +118,7 @@ body::before {
   letter-spacing: 2px;
   background: linear-gradient(90deg, var(--cyan), #fff);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
