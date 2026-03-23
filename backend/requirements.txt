@@ -4,5 +4,5 @@ numpy
 pandas
 scikit-learn
 joblib
-yagamail
+yagmail
 gunicorn
