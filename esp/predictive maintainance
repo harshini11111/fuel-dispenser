@@ -1,0 +1,149 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <RTClib.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADXL345_U.h>
+
+/* ---------------- PIN DEFINITIONS ---------------- */
+#define TEMP_PIN 4
+#define CURRENT_PIN 34
+#define FLOW_PIN 27
+#define RELAY_PIN 26
+
+/* ---------------- WIFI ---------------- */
+const char* ssid = "Harshini";
+const char* password = "harsh_131";
+
+/* ---------------- FLASK SERVER ---------------- */
+const char* serverName = "https://fuel-dispenser.onrender.com/esp32";
+
+/* ---------------- SENSOR OBJECTS ---------------- */
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified();
+OneWire oneWire(TEMP_PIN);
+DallasTemperature tempSensor(&oneWire);
+RTC_DS3231 rtc;
+
+/* ---------------- FLOW SENSOR ---------------- */
+volatile unsigned long pulseCount = 0;
+volatile unsigned long lastPulseTime = 0;
+const unsigned long debounceTime = 10000;  // 3000 microseconds = 3ms
+void IRAM_ATTR flowPulse() {
+  unsigned long currentTime = micros();
+
+  // Accept pulse only if enough time passed
+  if (currentTime - lastPulseTime > debounceTime) {
+    pulseCount++;
+    lastPulseTime = currentTime;
+  }
+}
+/* ---------------- THRESHOLDS ---------------- */
+float TEMP_LIMIT = 55.0;       // °C
+float CURRENT_LIMIT = 2.2;     // A
+float FLOW_MIN = 1.5;          // L/min
+float VIB_LIMIT = 2.0;         // m/s²
+
+/* ---------------- SETUP ---------------- */
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);   // Pump OFF initially
+
+  pinMode(FLOW_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(FLOW_PIN), flowPulse, FALLING);
+
+  Wire.begin(21, 22);
+  tempSensor.begin();
+  accel.begin();
+  rtc.begin();
+
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi Connected");
+  Serial.println("ESP32 System Ready");
+}
+
+/* ---------------- LOOP ---------------- */
+void loop() {
+
+  /* -------- TEMPERATURE -------- */
+  tempSensor.requestTemperatures();
+  float temperature = tempSensor.getTempCByIndex(0);
+
+  /* -------- CURRENT -------- */
+  int adc = analogRead(CURRENT_PIN);
+  float voltage = adc * (3.3 / 4095.0);
+  float current = (voltage - 2.45) / 0.185;
+
+  /* -------- VIBRATION -------- */
+  sensors_event_t event;
+  accel.getEvent(&event);
+  float vibration = sqrt(
+    sq(event.acceleration.x) +
+    sq(event.acceleration.y) +
+    sq(event.acceleration.z)
+  );
+
+  /* -------- FLOW -------- */
+  pulseCount = 0;
+  delay(1000);
+  float flow = pulseCount * 0.00225 * 60;
+
+  /* -------- RTC -------- */
+  DateTime now = rtc.now();
+  String timestamp = String(now.day()) + "/" +
+                     String(now.month()) + "/" +
+                     String(now.year()) + " " +
+                     String(now.hour()) + ":" +
+                     String(now.minute()) + ":" +
+                     String(now.second());
+
+  /* -------- HEALTH LABEL -------- */
+  int health = 0;   // 0=Healthy, 1=Warning, 2=Failure
+
+  if (temperature > 55 || current > 2.2 || flow < 1.5 || vibration > 2.0) {
+    health = 2;   // Failure
+    digitalWrite(RELAY_PIN, LOW);
+  }
+  else if (temperature > 48 || current > 1.6 || flow < 2.2 || vibration > 1.4) {
+    health = 1;   // Warning
+    digitalWrite(RELAY_PIN, HIGH);
+  }
+  else {
+    health = 0;   // Healthy
+    digitalWrite(RELAY_PIN, HIGH);
+  }
+
+  /* -------- SEND TO FLASK -------- */
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverName);
+    http.addHeader("Content-Type", "application/json");
+
+    String jsonData = "{";
+    jsonData += "\"temperature\":" + String(temperature) + ",";
+    jsonData += "\"current\":" + String(current) + ",";
+    jsonData += "\"flow\":" + String(flow) + ",";
+    jsonData += "\"vibration\":" + String(vibration) + ",";
+    jsonData += "\"health\":" + String(health) + ",";
+    jsonData += "\"timestamp\":\"" + timestamp + "\"";
+    jsonData += "}";
+
+    int responseCode = http.POST(jsonData);
+    Serial.println(jsonData);
+    Serial.println(responseCode);
+
+    http.end();
+  }
+
+  delay(5000);
+}
