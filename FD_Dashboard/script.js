@@ -157,10 +157,10 @@ function createChart(canvasId, label, dataArray, lineColor, thresholdValue) {
   });
 }
 
-const tempChart      = createChart("tempChart",      "Temperature (°C)", tempData,      "#ff6666", 50);
-const currentChart   = createChart("currentChart",   "Current (A)",       currentData,   "#ffcc00", 1.8);
+const tempChart      = createChart("tempChart",      "Temperature (°C)", tempData,      "#ff6666", 55);
+const currentChart   = createChart("currentChart",   "Current (A)",       currentData,   "#ffcc00", 2.0);
 const flowChart      = createChart("flowChart",       "Flow Rate (L/m)",  flowData,      "#00d4ff");
-const vibrationChart = createChart("vibrationChart", "Vibration",         vibrationData, "#aa88ff", 10);
+const vibrationChart = createChart("vibrationChart", "Vibration",         vibrationData, "#aa88ff", 2.0);
 
 
 // ═══════════════════════════════════════
@@ -193,49 +193,60 @@ const gauge = new Chart(document.getElementById("probabilityGauge"), {
 // SENSOR CARD COLOUR
 // ═══════════════════════════════════════
 
-function setBox(boxId, value, greenLimit, redLimit) {
+function setBox(boxId, value, warnLimit, critLimit) {
   const box = document.getElementById(boxId);
   box.classList.remove("green", "yellow", "red");
 
   const pillId = boxId.replace("Box", "Pill");
-  const pill   = document.getElementById(pillId === "vibPill" ? "vibPill" : pillId);
+  const pill = document.getElementById(pillId);
 
   let cssClass, pillState;
 
-  if (value <= greenLimit) {
-    cssClass  = "green";
+  if (value <= warnLimit) {
+    cssClass = "green";
     pillState = "ok";
-  } else if (value <= redLimit) {
-    cssClass  = "yellow";
+  } else if (value <= critLimit) {
+    cssClass = "yellow";
     pillState = "warn";
   } else {
-    cssClass  = "red";
+    cssClass = "red";
     pillState = "crit";
   }
 
   box.classList.add(cssClass);
 
   if (pill) {
-    pill.className   = "sc-status-pill " + pillState;
+    pill.className = "sc-status-pill " + pillState;
     pill.textContent =
-      pillState === "ok"   ? "● NORMAL"     :
-      pillState === "warn" ? "▲ WARNING"    :
-                             "⛔ CRITICAL";
+      pillState === "ok" ? "● NORMAL" :
+      pillState === "warn" ? "▲ WARNING" :
+      "⛔ CRITICAL";
   }
 }
-
+//=================================
+//FLOW LOGIC
+//=================================
 function setFlowBox(flow) {
   const box  = document.getElementById("flowBox");
   const pill = document.getElementById("flowPill");
 
   box.classList.remove("green", "yellow", "red");
 
-  if (flow <= 1 || flow > 15) {
+  if (flow < 1.5) {
     box.classList.add("red");
-    if (pill) { pill.className = "sc-status-pill crit"; pill.textContent = "⛔ CRITICAL"; }
-  } else {
+    if (pill) { pill.className = "sc-status-pill crit"; 
+      pill.textContent = "⛔ CRITICAL"; }
+  }
+  else if (flow<2.5){
+    box.classList.add("yellow");
+    if (pill) {pill.className = "sc-status-pill warn"; 
+      pill.textContent= "▲ WARNING"
+    }
+  } 
+  else {
     box.classList.add("green");
-    if (pill) { pill.className = "sc-status-pill ok";   pill.textContent = "● NORMAL"; }
+    if (pill) { pill.className = "sc-status-pill ok";
+      pill.textContent = "● NORMAL"; }
   }
 }
 
@@ -247,13 +258,20 @@ function setFlowBox(flow) {
 function calculateHealthScore(t, c, f, v) {
   let score = 100;
 
-  if (t > 50)             score -= 30;
-  if (c > 1.8)            score -= 25;
-  if (f <= 1 || f > 15)   score -= 25;
-  if (v > 0.06)           score -= 20;
-
+  if (t > 55) score -= 30; 
+  else if (t > 45) score -= 15; 
+  
+  if (c > 2.0) score -= 25; 
+  else if (c > 1.5) score -= 10; 
+  
+  if (f < 1.5) score -= 25; 
+  else if (f < 2.5) score -= 10; 
+  
+  if (v > 2.0) score -= 20; 
+  else if (v > 1.2) score -= 10; 
+  
   return Math.max(score, 0);
-}
+ }
 
 
 // ═══════════════════════════════════════
@@ -277,10 +295,10 @@ function updateAlertTicker(failures) {
 function updateHealth(t, c, f, v) {
   const failures = [];
 
-  if (t > 50)           failures.push("TEMPERATURE SENSOR FAILURE");
-  if (c > 1.8)          failures.push("MOTOR CURRENT OVERLOAD");
+  if (t > 55)           failures.push("TEMPERATURE SENSOR FAILURE");
+  if (c > 2.0)          failures.push("MOTOR CURRENT OVERLOAD");
   if (f <= 1 || f > 15) failures.push("FLOW METER FAILURE");
-  if (v > 12)           failures.push("PUMP BEARING FAILURE");
+  if (v > 2.0)           failures.push("PUMP BEARING FAILURE");
 
   const container = document.getElementById("healthText");
   container.innerHTML = "";
@@ -365,9 +383,9 @@ function syncThresholdLines() {
     }
   };
 
-  sync(tempChart,      labels.length, 50);
-  sync(currentChart,   labels.length, 1.8);
-  sync(vibrationChart, labels.length, 10);
+  sync(tempChart,      labels.length, 55);
+  sync(currentChart,   labels.length, 2.0);
+  sync(vibrationChart, labels.length, 2.0);
 }
 
 
@@ -391,11 +409,11 @@ async function updateDashboard() {
 
   } catch (e) {
     // Simulation fallback
-    temperature         = +(40 + Math.random() * 15).toFixed(1);
-    current             = +(1  + Math.random() * 1.2).toFixed(2);
-    flow                = +(2  + Math.random() * 12).toFixed(2);
-    vibration           = +(Math.random() * 0.15).toFixed(3);
-    failure_probability = Math.random() * 0.5;
+    temperature         = +(30 + Math.random() * 40).toFixed(1);
+    current             = +(0.5  + Math.random() * 2.5).toFixed(2);
+    flow                = +(0  + Math.random() * 15).toFixed(2);
+    vibration           = +(0.1 +Math.random() * 3.2).toFixed(3);
+    failure_probability = Math.random() ;
   }
 
   // Sensor value text
@@ -411,9 +429,9 @@ async function updateDashboard() {
   document.getElementById("vibrationBar").style.width = Math.min(100, vibration  / 20 * 100) + "%";
 
   // Sensor card colours
-  setBox("tempBox",      temperature, 45,  50);
-  setBox("currentBox",   current,     1.5, 1.8);
-  setBox("vibrationBox", vibration,   10,  20);
+  setBox("tempBox",      temperature, 45,  55);
+  setBox("currentBox",   current,     1.5, 2.0);
+  setBox("vibrationBox", vibration,   1.2,  2.0);
   setFlowBox(flow);
 
   // Health
